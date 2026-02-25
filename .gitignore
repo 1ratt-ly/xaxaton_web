@@ -1,13 +1,18 @@
-# Node
+# Зависимости
 node_modules/
+/frontend/node_modules/
+/backend/node_modules/
+
+# Сборка
 dist/
 build/
 
-# Environment
+# Переменные окружения (секреты)
 .env
 
-# IDE - JetBrains
+# Настройки IDE
 .idea/
+.vscode/
 
-# OS
+# Системные файлы
 .DS_Store
