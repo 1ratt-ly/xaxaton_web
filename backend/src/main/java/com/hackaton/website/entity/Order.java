@@ -24,23 +24,21 @@ public class Order {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal subtotal;
 
-    // Гео-результат
-    @Column(length = 64)
-    private String stateCode;     // "NY"
+    // Geo результат
+    @Column(length = 16)
+    private String stateCode;     // NY
     @Column(length = 128)
-    private String countyName;    // "Kings", "Albany" ...
+    private String countyName;    // New York, Kings, Albany...
 
-    // Breakdown ставок
+    // breakdown ставок (для дебага/логики)
     @Column(precision = 19, scale = 6)
     private BigDecimal stateRate;
-
     @Column(precision = 19, scale = 6)
     private BigDecimal countyRate;
-
     @Column(precision = 19, scale = 6)
     private BigDecimal specialRate;
 
-    // Итоговые поля, которые нужны фронту
+    // итог
     @Column(precision = 19, scale = 6)
     private BigDecimal compositeTaxRate;
 
@@ -55,7 +53,6 @@ public class Order {
 
     @PrePersist
     protected void onCreate() {
-        // если timestamp пришёл из CSV — не затираем
         if (this.timestamp == null) {
             this.timestamp = LocalDateTime.now();
         }

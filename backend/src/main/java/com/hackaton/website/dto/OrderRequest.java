@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public record ManualOrderRequest(
+public record OrderRequest(
         @NotNull
         @DecimalMin(value = "-90.0")
         @DecimalMax(value = "90.0")

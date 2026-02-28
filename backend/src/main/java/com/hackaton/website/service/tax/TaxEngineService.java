@@ -16,17 +16,13 @@ import java.time.LocalDateTime;
 @Service
 public class TaxEngineService {
 
-    private static final BigDecimal ZERO = new BigDecimal("0.00");
-
     private final GeocodingService geocodingService;
     private final TaxRateRepository taxRateRepository;
     private final OrderRepository orderRepository;
 
-    public TaxEngineService(
-            GeocodingService geocodingService,
-            TaxRateRepository taxRateRepository,
-            OrderRepository orderRepository
-    ) {
+    public TaxEngineService(GeocodingService geocodingService,
+                            TaxRateRepository taxRateRepository,
+                            OrderRepository orderRepository) {
         this.geocodingService = geocodingService;
         this.taxRateRepository = taxRateRepository;
         this.orderRepository = orderRepository;
@@ -34,11 +30,10 @@ public class TaxEngineService {
 
     public TaxCalculationResult calculateTax(BigDecimal subtotal, double lat, double lon) {
         if (subtotal == null) throw new IllegalArgumentException("subtotal is null");
-        if (subtotal.compareTo(ZERO) < 0) throw new IllegalArgumentException("subtotal must be >= 0");
+        if (subtotal.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("subtotal must be >= 0");
 
         GeocodingService.GeoResult geo = geocodingService.getCountyByCoordinates(lat, lon);
 
-        // Валидация NY
         if (!"NY".equalsIgnoreCase(geo.stateCode())) {
             throw new OutOfNyStateException("Point is outside NY. state=" + geo.stateCode());
         }
@@ -51,7 +46,6 @@ public class TaxEngineService {
                 .add(safe(rate.getSpecialRate()))
                 .setScale(6, RoundingMode.HALF_UP);
 
-        // tax = subtotal * rate
         BigDecimal taxAmount = subtotal.multiply(composite).setScale(2, RoundingMode.HALF_UP);
         BigDecimal totalAmount = subtotal.add(taxAmount).setScale(2, RoundingMode.HALF_UP);
 
@@ -67,7 +61,7 @@ public class TaxEngineService {
         );
     }
 
-    public Order createAndSaveOrder(double lat, double lon, BigDecimal subtotal, LocalDateTime timestampFromCsvOrNull) {
+    public Order createAndSaveOrder(double lat, double lon, BigDecimal subtotal, LocalDateTime timestampOrNull) {
         TaxCalculationResult r = calculateTax(subtotal, lat, lon);
 
         Order o = new Order();
@@ -86,9 +80,7 @@ public class TaxEngineService {
         o.setTaxAmount(r.taxAmount());
         o.setTotalAmount(r.totalAmount());
 
-        if (timestampFromCsvOrNull != null) {
-            o.setTimestamp(timestampFromCsvOrNull);
-        }
+        if (timestampOrNull != null) o.setTimestamp(timestampOrNull);
 
         return orderRepository.save(o);
     }

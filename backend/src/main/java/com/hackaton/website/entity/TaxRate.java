@@ -16,7 +16,7 @@ public class TaxRate {
     private Long id;
 
     @Column(nullable = false, length = 128, unique = true)
-    private String countyName; // "Kings", "Albany" ...
+    private String countyName;
 
     @Column(nullable = false, precision = 19, scale = 6)
     private BigDecimal stateRate;

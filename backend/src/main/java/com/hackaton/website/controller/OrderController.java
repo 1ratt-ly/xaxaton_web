@@ -1,7 +1,7 @@
 package com.hackaton.website.controller;
 
 import com.hackaton.website.dto.ImportJobResponse;
-import com.hackaton.website.dto.ManualOrderRequest;
+import com.hackaton.website.dto.OrderRequest;
 import com.hackaton.website.dto.OrderResponse;
 import com.hackaton.website.entity.Order;
 import com.hackaton.website.repository.OrderRepository;
@@ -19,20 +19,21 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({"/api/orders", "/orders"}) // поддержим оба варианта
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderRepository orderRepository;
     private final TaxEngineService taxEngineService;
     private final ImportJobService importJobService;
 
-    public OrderController(OrderRepository orderRepository, TaxEngineService taxEngineService, ImportJobService importJobService) {
+    public OrderController(OrderRepository orderRepository,
+                           TaxEngineService taxEngineService,
+                           ImportJobService importJobService) {
         this.orderRepository = orderRepository;
         this.taxEngineService = taxEngineService;
         this.importJobService = importJobService;
     }
 
-    // GET /api/orders?page=0&size=100
     @GetMapping
     public List<OrderResponse> getOrders(
             @RequestParam(defaultValue = "0") int page,
@@ -44,10 +45,9 @@ public class OrderController {
                 .toList();
     }
 
-    // POST /api/orders  { latitude, longitude, subtotal }
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse create(@Valid @RequestBody ManualOrderRequest req) {
+    public OrderResponse create(@Valid @RequestBody OrderRequest req) {
         Order saved = taxEngineService.createAndSaveOrder(
                 req.latitude(),
                 req.longitude(),
@@ -57,8 +57,6 @@ public class OrderController {
         return OrderResponse.from(saved);
     }
 
-    // POST /api/orders/import (multipart file)
-    // async job: сразу возвращаем jobId
     @PostMapping("/import")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ImportJobResponse importCsv(@RequestParam("file") MultipartFile file) {
@@ -69,13 +67,10 @@ public class OrderController {
         return ImportJobResponse.from(status);
     }
 
-    // GET /api/orders/import/{jobId}
     @GetMapping("/import/{jobId}")
     public ImportJobResponse importStatus(@PathVariable UUID jobId) {
         ImportJobStatus s = importJobService.get(jobId);
-        if (s == null) {
-            throw new IllegalArgumentException("job not found: " + jobId);
-        }
+        if (s == null) throw new IllegalArgumentException("job not found: " + jobId);
         return ImportJobResponse.from(s);
     }
 }

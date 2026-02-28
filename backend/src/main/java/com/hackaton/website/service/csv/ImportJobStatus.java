@@ -24,9 +24,7 @@ public class ImportJobStatus {
 
     private final List<String> errorsSample = new ArrayList<>();
 
-    public ImportJobStatus(UUID jobId) {
-        this.jobId = jobId;
-    }
+    public ImportJobStatus(UUID jobId) { this.jobId = jobId; }
 
     public UUID getJobId() { return jobId; }
     public State getState() { return state; }
@@ -39,21 +37,9 @@ public class ImportJobStatus {
     public Instant getFinishedAt() { return finishedAt; }
     public List<String> getErrorsSample() { return errorsSample; }
 
-    public void markRunning() {
-        this.state = State.RUNNING;
-        this.startedAt = Instant.now();
-    }
-
-    public void markDone() {
-        this.state = State.DONE;
-        this.finishedAt = Instant.now();
-    }
-
-    public void markFailed(String msg) {
-        this.state = State.FAILED;
-        this.message = msg;
-        this.finishedAt = Instant.now();
-    }
+    public void markRunning() { this.state = State.RUNNING; this.startedAt = Instant.now(); }
+    public void markDone() { this.state = State.DONE; this.finishedAt = Instant.now(); }
+    public void markFailed(String msg) { this.state = State.FAILED; this.message = msg; this.finishedAt = Instant.now(); }
 
     public void incTotal() { totalRows++; }
     public void incSuccess() { successCount++; }

@@ -26,21 +26,18 @@ public class CsvImportService {
         this.importExecutor = importExecutor;
     }
 
-    /**
-     * Импортирует CSV из stream. Обновляет progress.
-     */
     public void importCsv(InputStream inputStream, ImportJobStatus progress) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
 
             String headerLine = br.readLine();
             if (headerLine == null) throw new CsvImportException("CSV is empty");
 
-            String[] headers = splitCsvLine(headerLine);
+            String[] headers = split(headerLine);
             Map<String, Integer> idx = indexMap(headers);
 
-            int latIdx = pickIndex(idx, "latitude");
-            int lonIdx = pickIndex(idx, "longitude");
-            int subIdx = pickIndex(idx, "subtotal");
+            int latIdx = idx.getOrDefault("latitude", -1);
+            int lonIdx = idx.getOrDefault("longitude", -1);
+            int subIdx = idx.getOrDefault("subtotal", -1);
             int tsIdx  = idx.getOrDefault("timestamp", -1);
 
             if (latIdx < 0 || lonIdx < 0 || subIdx < 0) {
@@ -48,24 +45,23 @@ public class CsvImportService {
             }
 
             List<CompletableFuture<Void>> futures = new ArrayList<>();
-
             String line;
-            int lineNo = 1; // header = 1
+            int lineNo = 1;
+
             while ((line = br.readLine()) != null) {
                 lineNo++;
                 String raw = line.trim();
                 if (raw.isEmpty()) continue;
 
-                String[] cols = splitCsvLine(raw);
-                // иногда последние пустые колонки теряются
-                if (cols.length < Math.max(Math.max(latIdx, lonIdx), subIdx) + 1) {
+                String[] cols = split(raw);
+                if (cols.length <= Math.max(Math.max(latIdx, lonIdx), subIdx)) {
                     progress.incFailed("Line " + lineNo + ": not enough columns");
                     continue;
                 }
 
                 progress.incTotal();
-
                 final int ln = lineNo;
+
                 CompletableFuture<Void> f = CompletableFuture.runAsync(() -> {
                     try {
                         double lat = parseDouble(cols[latIdx], "latitude");
@@ -86,7 +82,6 @@ public class CsvImportService {
 
                 futures.add(f);
 
-                // батчим, чтобы не раздувать память на огромных файлах
                 if (futures.size() >= 300) {
                     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
                     futures.clear();
@@ -112,12 +107,7 @@ public class CsvImportService {
         return m;
     }
 
-    private static int pickIndex(Map<String, Integer> idx, String name) {
-        return idx.getOrDefault(name.toLowerCase(Locale.ROOT), -1);
-    }
-
-    // простой CSV split (для ваших файлов достаточно: числа, даты, без запятых в кавычках)
-    private static String[] splitCsvLine(String line) {
+    private static String[] split(String line) {
         return line.split("\\s*,\\s*");
     }
 
@@ -145,13 +135,9 @@ public class CsvImportService {
     private static LocalDateTime parseTimestamp(String s) {
         String t = s.trim();
         if (t.isEmpty()) return null;
-
-        // пример: 2025-11-04 10:17:05
-        DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         try {
-            return LocalDateTime.parse(t, f);
+            return LocalDateTime.parse(t, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } catch (Exception e) {
-            // если формат другой — просто игнорируем, чтобы не валить импорт
             return null;
         }
     }
