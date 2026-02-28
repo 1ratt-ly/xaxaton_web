@@ -1,18 +1,29 @@
 package com.hackaton.website.service.geocoding;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.hackaton.website.exception.GeocodingException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class FccGeocodingService implements GeocodingService {
 
     private final RestTemplate restTemplate;
     private final Map<String, GeoResult> cache = new ConcurrentHashMap<>();
+
+    // Достаём State.code и County.name из JSON (без Jackson)
+    private static final Pattern STATE_CODE = Pattern.compile(
+            "\"State\"\\s*:\\s*\\{.*?\"code\"\\s*:\\s*\"([^\"]+)\"",
+            Pattern.DOTALL
+    );
+    private static final Pattern COUNTY_NAME = Pattern.compile(
+            "\"County\"\\s*:\\s*\\{.*?\"name\"\\s*:\\s*\"([^\"]+)\"",
+            Pattern.DOTALL
+    );
 
     public FccGeocodingService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -30,18 +41,13 @@ public class FccGeocodingService implements GeocodingService {
                 + "&format=json";
 
         try {
-            JsonNode root = restTemplate.getForObject(url, JsonNode.class);
-            if (root == null) throw new GeocodingException("FCC returned empty response");
-
-            String stateCode = text(root, "State", "code");
-            String countyName = text(root, "County", "name");
-
-            if (stateCode == null || stateCode.isBlank()) {
-                throw new GeocodingException("FCC: cannot extract State.code");
+            String body = restTemplate.getForObject(url, String.class);
+            if (body == null || body.isBlank()) {
+                throw new GeocodingException("FCC returned empty response");
             }
-            if (countyName == null || countyName.isBlank()) {
-                throw new GeocodingException("FCC: cannot extract County.name");
-            }
+
+            String stateCode = extract(body, STATE_CODE, "State.code");
+            String countyName = extract(body, COUNTY_NAME, "County.name");
 
             countyName = normalizeCounty(countyName);
 
@@ -56,10 +62,16 @@ public class FccGeocodingService implements GeocodingService {
         }
     }
 
-    private static String text(JsonNode root, String obj, String field) {
-        JsonNode n = root.path(obj).path(field);
-        if (n.isMissingNode() || n.isNull()) return null;
-        return n.asText();
+    private static String extract(String json, Pattern p, String field) {
+        Matcher m = p.matcher(json);
+        if (!m.find()) {
+            throw new GeocodingException("FCC: cannot extract " + field);
+        }
+        String val = m.group(1);
+        if (val == null || val.isBlank()) {
+            throw new GeocodingException("FCC: empty " + field);
+        }
+        return val;
     }
 
     private static String normalizeCounty(String raw) {
