@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "orders")
 @Data
-
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,15 +22,17 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal subtotal;
 
-    // тут потім податки будуть рахуватись
     private BigDecimal compositeTaxRate;
     private BigDecimal taxAmount;
     private BigDecimal totalAmount;
 
-    @Column(name = "created_at")
+    // розбивка
+    @Column(columnDefinition = "TEXT")
+    private String breakdown;
+
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime timestamp;
 
-    // цей метод автоматично поставить поточний час при збереженні в БД
     @PrePersist
     protected void onCreate() {
         this.timestamp = LocalDateTime.now();
