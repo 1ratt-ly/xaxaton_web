@@ -26,7 +26,7 @@
 
 ## Інструкція
 
-1. Відкрийте термінал MySQL (CREATE DATABASE wellness_tax;)
+1. Відкрийте термінал MySQL (CREATE DATABASE tax_db;)
 2. Відкрийте термінал та перейдіть у директорію бекенду
 3. Відкрийте конфігураційний файл src/main/resources/application.properties
 4. Вкажіть ваші локальні креденшіали до MySQL
