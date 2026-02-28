@@ -23,10 +23,8 @@ function LoginPage() {
   const canSubmit = useMemo(() => email.trim() !== "" && pass.trim() !== "",[email, pass]);
 
   const onLogin = () => {
-    // Дозволяємо вхід або як admin, або як admin@example.com
     if ((email === "admin" || email === "admin@example.com") && pass === "admin123") {
       setAuthed(true);
-      // Зберігаємо токен для Basic Auth (використовується в api.ts)
       localStorage.setItem("authToken", btoa("admin:admin123"));
       nav("/admin", { replace: true });
     } else {
@@ -83,7 +81,7 @@ function LoginPage() {
               </button>
             </div>
 
-            {/* Виведення помилки, якщо логін/пароль неправильні */}
+            {}
             {error && <div className="error" style={{ marginTop: "14px", borderTop: "none" }}>{error}</div>}
           </div>
         </div>

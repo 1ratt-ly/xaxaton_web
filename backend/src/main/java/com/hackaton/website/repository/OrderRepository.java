@@ -6,6 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    // Додаємо метод для фільтрації
+    // метод для фільтрації
     Page<Order> findByCountyNameContainingIgnoreCase(String countyName, Pageable pageable);
 }

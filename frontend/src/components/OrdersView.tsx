@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getOrders } from "../lib/api";
-import type { Order } from "../types/order"; // <-- ДОДАНО ІМПОРТ ТИПУ
+import type { Order } from "../types/order";
 
 function money(n: number) {
   if (n === undefined || n === null) return "$0.00";
@@ -8,8 +8,8 @@ function money(n: number) {
 }
 
 export default function OrdersView() {
-  const [orders, setOrders] = useState<Order[]>([]); // <-- ВИПРАВЛЕНО ANY
-  const [loading, setLoading] = useState(true); // Вже true за замовчуванням
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const[error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
@@ -19,7 +19,6 @@ export default function OrdersView() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  // ВИПРАВЛЕНО: Прибрали синхронні setLoading з useEffect
   useEffect(() => {
     getOrders()
         .then((data) => {
@@ -60,13 +59,11 @@ export default function OrdersView() {
     return filtered.slice(start, start + pageSize);
   }, [filtered, safePage]);
 
-  // ВИПРАВЛЕНО: Прибрали useEffect для setPage(1). Тепер ми робимо це прямо в onChange.
-
   const resetFilters = () => {
     setSearch("");
     setMinSubtotal("");
     setMaxSubtotal("");
-    setPage(1); // Скидаємо сторінку
+    setPage(1);
   };
 
   return (

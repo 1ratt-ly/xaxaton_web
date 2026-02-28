@@ -38,7 +38,7 @@ public class OrderController {
 
     @GetMapping
     public List<OrderResponse> getOrders(
-            @RequestParam(required = false) String countyName, // <-- Додано фільтр
+            @RequestParam(required = false) String countyName,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "1000") int size
     ) {

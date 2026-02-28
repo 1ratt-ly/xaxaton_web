@@ -21,7 +21,6 @@ export default function CreateView() {
     const latNum = Number(lat);
     const lonNum = Number(lon);
 
-    // ДОДАНО: Перевірка координат перед відправкою
     if (latNum < -90 || latNum > 90) {
       setError("Помилка: Latitude (Широта) має бути в межах від -90 до 90.");
       return;

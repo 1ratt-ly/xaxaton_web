@@ -26,7 +26,6 @@ type ImportJobSnake = {
 type ImportJob = ImportJobCamel | ImportJobSnake;
 
 function normalizeJob(j: ImportJobCamel | ImportJobSnake): ImportJobCamel {
-    // camelCase бек (Spring record) :contentReference[oaicite:3]{index=3}
     if ("jobId" in j) {
         return {
             jobId: j.jobId,
@@ -39,7 +38,6 @@ function normalizeJob(j: ImportJobCamel | ImportJobSnake): ImportJobCamel {
         };
     }
 
-    // snake_case (если у тебя ещё старый бек)
     return {
         jobId: j.job_id,
         state: j.state,
@@ -66,7 +64,7 @@ export default function ImportCsvView() {
     };
 
     useEffect(() => {
-        return () => stopPolling(); // чистим интервал при размонтировании
+        return () => stopPolling();
     }, []);
 
     const startPolling = (jobId: string) => {

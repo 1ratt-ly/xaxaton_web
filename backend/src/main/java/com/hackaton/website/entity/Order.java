@@ -26,21 +26,20 @@ public class Order {
 
     // Geo результат
     @Column(length = 16)
-    private String stateCode;     // NY
+    private String stateCode;
     @Column(length = 128)
-    private String countyName;    // New York, Kings, Albany...
+    private String countyName;
 
-    // breakdown ставок (для дебага/логики)
     @Column(precision = 19, scale = 6)
     private BigDecimal stateRate;
     @Column(precision = 19, scale = 6)
     private BigDecimal countyRate;
     @Column(precision = 19, scale = 6)
-    private BigDecimal cityRate;    // <-- Додано
+    private BigDecimal cityRate;
     @Column(precision = 19, scale = 6)
     private BigDecimal specialRate;
 
-    // итог
+
     @Column(precision = 19, scale = 6)
     private BigDecimal compositeTaxRate;
 
