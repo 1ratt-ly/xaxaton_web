@@ -36,6 +36,8 @@ public class Order {
     @Column(precision = 19, scale = 6)
     private BigDecimal countyRate;
     @Column(precision = 19, scale = 6)
+    private BigDecimal cityRate;    // <-- Додано
+    @Column(precision = 19, scale = 6)
     private BigDecimal specialRate;
 
     // итог

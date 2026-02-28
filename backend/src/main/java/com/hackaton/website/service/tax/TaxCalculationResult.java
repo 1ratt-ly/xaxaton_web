@@ -7,6 +7,7 @@ public record TaxCalculationResult(
         String countyName,
         BigDecimal stateRate,
         BigDecimal countyRate,
+        BigDecimal cityRate,
         BigDecimal specialRate,
         BigDecimal compositeTaxRate,
         BigDecimal taxAmount,

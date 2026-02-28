@@ -1,23 +1,36 @@
-type Tab = "orders" | "create" | "import";
+type TabKey = "orders" | "create" | "import";
 
-export default function Tabs({
-  tab,
-  onChange,
-}: {
-  tab: Tab;
-  onChange: (t: Tab) => void;
-}) {
-  return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      <button className="btn" onClick={() => onChange("orders")} disabled={tab === "orders"}>
-        Orders
-      </button>
-      <button className="btn" onClick={() => onChange("create")} disabled={tab === "create"}>
-        Create
-      </button>
-      <button className="btn" onClick={() => onChange("import")} disabled={tab === "import"}>
-        Import CSV
-      </button>
-    </div>
-  );
+type TabsProps = {
+    value: TabKey;
+    onChange: (value: TabKey) => void;
+};
+
+export default function Tabs({ value, onChange }: TabsProps) {
+    return (
+        <div className="tabs">
+            <button
+                type="button"
+                className={`tabBtn ${value === "orders" ? "active" : ""}`}
+                onClick={() => onChange("orders")}
+            >
+                Orders
+            </button>
+
+            <button
+                type="button"
+                className={`tabBtn ${value === "create" ? "active" : ""}`}
+                onClick={() => onChange("create")}
+            >
+                Create
+            </button>
+
+            <button
+                type="button"
+                className={`tabBtn ${value === "import" ? "active" : ""}`}
+                onClick={() => onChange("import")}
+            >
+                Import CSV
+            </button>
+        </div>
+    );
 }

@@ -60,6 +60,7 @@ public class DataLoader implements CommandLineRunner {
             // разные схемы колонок
             Integer stateRateIdx   = pick(idx, "state_rate", "state", "state_tax", "statetax");
             Integer countyRateIdx  = pick(idx, "county_rate", "county", "local_tax", "localtax");
+            Integer cityRateIdx    = pick(idx, "city_rate", "city", "city_tax", "citytax"); // <-- Додано
             Integer specialRateIdx = pick(idx, "special_rate", "special", "specialtax");
             Integer totalIdx       = pick(idx, "total_tax", "total_rate", "total", "totaltax");
 
@@ -79,13 +80,15 @@ public class DataLoader implements CommandLineRunner {
 
                 BigDecimal stateRate  = getRate(cols, stateRateIdx);
                 BigDecimal countyRate = getRate(cols, countyRateIdx);
+                BigDecimal cityRate    = getRate(cols, cityRateIdx); // <-- Додано
                 BigDecimal specialRate = getRate(cols, specialRateIdx);
 
                 // если special нет, но есть total — вычислим
                 if (specialRate == null && totalIdx != null && totalIdx >= 0 && totalIdx < cols.length) {
                     BigDecimal total = parseRate(cols[totalIdx]);
                     if (total != null && stateRate != null && countyRate != null) {
-                        BigDecimal calc = total.subtract(stateRate).subtract(countyRate);
+                        BigDecimal safeCity = cityRate != null ? cityRate : BigDecimal.ZERO;
+                        BigDecimal calc = total.subtract(stateRate).subtract(countyRate).subtract(safeCity);
                         if (calc.compareTo(BigDecimal.ZERO) < 0) calc = BigDecimal.ZERO;
                         specialRate = calc;
                     }
@@ -94,12 +97,14 @@ public class DataLoader implements CommandLineRunner {
                 // если каких-то ставок нет — считаем их 0
                 if (stateRate == null) stateRate = BigDecimal.ZERO;
                 if (countyRate == null) countyRate = BigDecimal.ZERO;
+                if (cityRate == null) cityRate = BigDecimal.ZERO;
                 if (specialRate == null) specialRate = BigDecimal.ZERO;
 
                 TaxRate t = new TaxRate();
                 t.setCountyName(county);
                 t.setStateRate(stateRate);
                 t.setCountyRate(countyRate);
+                t.setCityRate(cityRate);      // <-- Додано
                 t.setSpecialRate(specialRate);
 
                 taxRateRepository.save(t);

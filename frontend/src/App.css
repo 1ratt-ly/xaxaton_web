@@ -257,3 +257,32 @@ body{
   flex: 1;
   min-width: 0;
 }
+
+.tabs{
+  display:flex;
+  gap:10px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+
+.tabBtn{
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  cursor:pointer;
+  font-weight: 650;
+}
+
+.tabBtn:hover{
+  background: rgba(255,255,255,0.12);
+}
+
+.tabBtn.active{
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.22);
+}

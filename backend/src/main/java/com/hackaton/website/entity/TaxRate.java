@@ -25,5 +25,8 @@ public class TaxRate {
     private BigDecimal countyRate;
 
     @Column(nullable = false, precision = 19, scale = 6)
+    private BigDecimal cityRate;    // <-- Додано
+
+    @Column(nullable = false, precision = 19, scale = 6)
     private BigDecimal specialRate;
 }

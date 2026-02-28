@@ -14,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,17 +35,26 @@ public class OrderController {
         this.importJobService = importJobService;
     }
 
+
     @GetMapping
     public List<OrderResponse> getOrders(
+            @RequestParam(required = false) String countyName, // <-- Додано фільтр
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "1000") int size
     ) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
-        return orderRepository.findAll(pageable).getContent().stream()
+
+        Page<Order> orderPage;
+        if (countyName != null && !countyName.isBlank()) {
+            orderPage = orderRepository.findByCountyNameContainingIgnoreCase(countyName.trim(), pageable);
+        } else {
+            orderPage = orderRepository.findAll(pageable);
+        }
+
+        return orderPage.getContent().stream()
                 .map(OrderResponse::from)
                 .toList();
     }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse create(@Valid @RequestBody OrderRequest req) {

@@ -43,6 +43,7 @@ public class TaxEngineService {
 
         BigDecimal composite = safe(rate.getStateRate())
                 .add(safe(rate.getCountyRate()))
+                .add(safe(rate.getCityRate()))
                 .add(safe(rate.getSpecialRate()))
                 .setScale(6, RoundingMode.HALF_UP);
 
@@ -54,6 +55,7 @@ public class TaxEngineService {
                 geo.countyName(),
                 safe(rate.getStateRate()),
                 safe(rate.getCountyRate()),
+                safe(rate.getCityRate()),
                 safe(rate.getSpecialRate()),
                 composite,
                 taxAmount,
@@ -74,6 +76,7 @@ public class TaxEngineService {
 
         o.setStateRate(r.stateRate());
         o.setCountyRate(r.countyRate());
+        o.setCityRate(r.cityRate());
         o.setSpecialRate(r.specialRate());
 
         o.setCompositeTaxRate(r.compositeTaxRate());

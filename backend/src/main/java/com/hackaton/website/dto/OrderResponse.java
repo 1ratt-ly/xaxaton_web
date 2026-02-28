@@ -10,6 +10,10 @@ public record OrderResponse(
         Double latitude,
         Double longitude,
         BigDecimal subtotal,
+        BigDecimal stateRate,    // <-- Додано
+        BigDecimal countyRate,   // <-- Додано
+        BigDecimal cityRate,     // <-- Додано
+        BigDecimal specialRate,  // <-- Додано
         BigDecimal compositeTaxRate,
         BigDecimal taxAmount,
         BigDecimal totalAmount,
@@ -21,6 +25,10 @@ public record OrderResponse(
                 o.getLatitude(),
                 o.getLongitude(),
                 o.getSubtotal(),
+                o.getStateRate(),     // <-- Додано
+                o.getCountyRate(),    // <-- Додано
+                o.getCityRate(),      // <-- Додано
+                o.getSpecialRate(),   // <-- Додано
                 o.getCompositeTaxRate(),
                 o.getTaxAmount(),
                 o.getTotalAmount(),
