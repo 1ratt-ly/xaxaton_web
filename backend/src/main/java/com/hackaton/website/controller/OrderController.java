@@ -1,0 +1,81 @@
+package com.hackaton.website.controller;
+
+import com.hackaton.website.dto.ImportJobResponse;
+import com.hackaton.website.dto.ManualOrderRequest;
+import com.hackaton.website.dto.OrderResponse;
+import com.hackaton.website.entity.Order;
+import com.hackaton.website.repository.OrderRepository;
+import com.hackaton.website.service.csv.ImportJobService;
+import com.hackaton.website.service.csv.ImportJobStatus;
+import com.hackaton.website.service.tax.TaxEngineService;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping({"/api/orders", "/orders"}) // поддержим оба варианта
+public class OrderController {
+
+    private final OrderRepository orderRepository;
+    private final TaxEngineService taxEngineService;
+    private final ImportJobService importJobService;
+
+    public OrderController(OrderRepository orderRepository, TaxEngineService taxEngineService, ImportJobService importJobService) {
+        this.orderRepository = orderRepository;
+        this.taxEngineService = taxEngineService;
+        this.importJobService = importJobService;
+    }
+
+    // GET /api/orders?page=0&size=100
+    @GetMapping
+    public List<OrderResponse> getOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1000") int size
+    ) {
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
+        return orderRepository.findAll(pageable).getContent().stream()
+                .map(OrderResponse::from)
+                .toList();
+    }
+
+    // POST /api/orders  { latitude, longitude, subtotal }
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public OrderResponse create(@Valid @RequestBody ManualOrderRequest req) {
+        Order saved = taxEngineService.createAndSaveOrder(
+                req.latitude(),
+                req.longitude(),
+                req.subtotal(),
+                null
+        );
+        return OrderResponse.from(saved);
+    }
+
+    // POST /api/orders/import (multipart file)
+    // async job: сразу возвращаем jobId
+    @PostMapping("/import")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public ImportJobResponse importCsv(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("file is empty");
+        }
+        ImportJobStatus status = importJobService.startAsync(file);
+        return ImportJobResponse.from(status);
+    }
+
+    // GET /api/orders/import/{jobId}
+    @GetMapping("/import/{jobId}")
+    public ImportJobResponse importStatus(@PathVariable UUID jobId) {
+        ImportJobStatus s = importJobService.get(jobId);
+        if (s == null) {
+            throw new IllegalArgumentException("job not found: " + jobId);
+        }
+        return ImportJobResponse.from(s);
+    }
+}
