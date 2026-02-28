@@ -3,8 +3,12 @@ export interface Order {
   latitude: number;
   longitude: number;
   subtotal: number;
-  total_amount: number;
-  tax_amount: number;
+  state_rate: number;
+  county_rate: number;
+  city_rate: number;
+  special_rate: number;
   composite_tax_rate: number;
-  timestamp?: string;
+  tax_amount: number;
+  total_amount: number;
+  timestamp: string;
 }

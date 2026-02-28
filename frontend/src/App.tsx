@@ -9,19 +9,29 @@ function isAuthed() {
 
 function setAuthed(v: boolean) {
   localStorage.setItem("auth", v ? "1" : "0");
+  if (!v) {
+    localStorage.removeItem("authToken");
+  }
 }
 
 function LoginPage() {
   const nav = useNavigate();
   const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  const[pass, setPass] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = useMemo(() => email.trim() !== "" && pass.trim() !== "", [email, pass]);
+  const canSubmit = useMemo(() => email.trim() !== "" && pass.trim() !== "",[email, pass]);
 
   const onLogin = () => {
-    // пускаем любого, кто ввёл email+password
-    setAuthed(true);
-    nav("/admin", { replace: true });
+    // Дозволяємо вхід або як admin, або як admin@example.com
+    if ((email === "admin" || email === "admin@example.com") && pass === "admin123") {
+      setAuthed(true);
+      // Зберігаємо токен для Basic Auth (використовується в api.ts)
+      localStorage.setItem("authToken", btoa("admin:admin123"));
+      nav("/admin", { replace: true });
+    } else {
+      setError("Невірний логін або пароль. Доступ тільки для адміністратора.");
+    }
   };
 
   const onRegister = () => {
@@ -44,12 +54,12 @@ function LoginPage() {
           <div className="card">
             <div className="filters" style={{ gridTemplateColumns: "1fr 1fr auto auto", borderBottom: "none" }}>
               <label className="label">
-                <span>Email</span>
+                <span>Email or Login</span>
                 <input
                     className="input"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@example.com"
+                    onChange={(e) => { setEmail(e.target.value); setError(null); }}
+                    placeholder="admin"
                 />
               </label>
 
@@ -59,7 +69,7 @@ function LoginPage() {
                     className="input"
                     type="password"
                     value={pass}
-                    onChange={(e) => setPass(e.target.value)}
+                    onChange={(e) => { setPass(e.target.value); setError(null); }}
                     placeholder="••••••••"
                 />
               </label>
@@ -72,6 +82,9 @@ function LoginPage() {
                 Register
               </button>
             </div>
+
+            {/* Виведення помилки, якщо логін/пароль неправильні */}
+            {error && <div className="error" style={{ marginTop: "14px", borderTop: "none" }}>{error}</div>}
           </div>
         </div>
       </div>

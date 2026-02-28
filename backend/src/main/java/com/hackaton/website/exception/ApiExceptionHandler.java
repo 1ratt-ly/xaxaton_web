@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.time.Instant;
 
@@ -35,6 +36,13 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> fallback(Exception e, HttpServletRequest req) {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), req);
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidationExceptions(HttpServletRequest req) {
+        // Замість довгого трейсу повертаємо коротке зрозуміле повідомлення
+        return build(HttpStatus.BAD_REQUEST, "Некоректні дані: перевірте правильність координат (Latitude/Longitude) та суми.", req);
+    }
+
 
     private ResponseEntity<ApiError> build(HttpStatus st, String msg, HttpServletRequest req) {
         ApiError body = new ApiError(
