@@ -1,11 +1,10 @@
 package com.hackaton.website.config;
 
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -13,17 +12,13 @@ import java.util.concurrent.Executors;
 public class AppConfig {
 
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder
-                .setConnectTimeout(Duration.ofSeconds(3))
-                .setReadTimeout(Duration.ofSeconds(6))
-                .build();
+    public RestTemplate restTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(3000); // ms
+        factory.setReadTimeout(6000);    // ms
+        return new RestTemplate(factory);
     }
 
-    /**
-     * Пул потоков для параллельных задач (FCC + расчёт + сохранение).
-     * destroyMethod гарантирует shutdown при остановке приложения.
-     */
     @Bean(destroyMethod = "shutdown")
     public ExecutorService importExecutor() {
         int cpu = Runtime.getRuntime().availableProcessors();

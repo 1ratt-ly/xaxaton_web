@@ -1,13 +1,13 @@
 package com.hackaton.website.service.geocoding;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.hackaton.website.exception.GeocodingException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class FccGeocodingService implements GeocodingService {
@@ -16,6 +16,16 @@ public class FccGeocodingService implements GeocodingService {
 
     // простой кеш, чтобы не дёргать FCC одинаковыми координатами
     private final Map<String, GeoResult> cache = new ConcurrentHashMap<>();
+
+    // Достаём State.code и County.name из JSON
+    private static final Pattern STATE_CODE = Pattern.compile(
+            "\"State\"\\s*:\\s*\\{.*?\"code\"\\s*:\\s*\"([^\"]+)\"",
+            Pattern.DOTALL
+    );
+    private static final Pattern COUNTY_NAME = Pattern.compile(
+            "\"County\"\\s*:\\s*\\{.*?\"name\"\\s*:\\s*\"([^\"]+)\"",
+            Pattern.DOTALL
+    );
 
     public FccGeocodingService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -27,32 +37,26 @@ public class FccGeocodingService implements GeocodingService {
         GeoResult cached = cache.get(key);
         if (cached != null) return cached;
 
-        String url = UriComponentsBuilder
-                .fromHttpUrl("https://geo.fcc.gov/api/census/block/find")
-                .queryParam("latitude", lat)
-                .queryParam("longitude", lon)
-                .queryParam("format", "json")
-                .toUriString();
+        String url = "https://geo.fcc.gov/api/census/block/find"
+                + "?latitude=" + lat
+                + "&longitude=" + lon
+                + "&format=json";
 
         try {
-            JsonNode root = restTemplate.getForObject(url, JsonNode.class);
-            if (root == null) throw new GeocodingException("FCC returned empty response");
-
-            String stateCode = text(root, "State", "code");
-            String countyName = text(root, "County", "name");
-
-            if (stateCode == null || stateCode.isBlank()) {
-                throw new GeocodingException("FCC: cannot extract State.code");
+            String body = restTemplate.getForObject(url, String.class);
+            if (body == null || body.isBlank()) {
+                throw new GeocodingException("FCC returned empty response");
             }
-            if (countyName == null || countyName.isBlank()) {
-                throw new GeocodingException("FCC: cannot extract County.name");
-            }
+
+            String stateCode = extract(body, STATE_CODE, "State.code");
+            String countyName = extract(body, COUNTY_NAME, "County.name");
 
             countyName = normalizeCounty(countyName);
 
             GeoResult result = new GeoResult(stateCode.trim(), countyName);
             cache.put(key, result);
             return result;
+
         } catch (GeocodingException e) {
             throw e;
         } catch (Exception e) {
@@ -60,16 +64,18 @@ public class FccGeocodingService implements GeocodingService {
         }
     }
 
-    private static String text(JsonNode root, String obj, String field) {
-        JsonNode n = root.path(obj).path(field);
-        if (n.isMissingNode() || n.isNull()) return null;
-        return n.asText();
+    private static String extract(String json, Pattern p, String field) {
+        Matcher m = p.matcher(json);
+        if (!m.find()) {
+            throw new GeocodingException("FCC: cannot extract " + field);
+        }
+        String val = m.group(1);
+        if (val == null || val.isBlank()) {
+            throw new GeocodingException("FCC: empty " + field);
+        }
+        return val;
     }
 
-    /**
-     * ТЗ говорит: "Kings", "Albany".
-     * FCC иногда отдаёт "Kings County" -> убираем суффикс.
-     */
     private static String normalizeCounty(String raw) {
         String s = raw.trim();
         if (s.endsWith(" County")) s = s.substring(0, s.length() - " County".length()).trim();
